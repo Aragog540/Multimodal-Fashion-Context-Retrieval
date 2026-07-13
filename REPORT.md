@@ -127,7 +127,9 @@ To extend search to encompass location context (e.g. "rainy London street", "sun
 
 ---
 
-## 5. Codebase Structure & Usage
+## 5. Codebase Link & Structure
+
+* **GitHub Repository Link**: [https://github.com/Aragog540/Multimodal-Fashion-Context-Retrieval](https://github.com/Aragog540/Multimodal-Fashion-Context-Retrieval)
 
 The codebase is highly modular, separating feature extraction, database storage, and retrieval logic:
 
