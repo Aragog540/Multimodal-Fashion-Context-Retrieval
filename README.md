@@ -64,7 +64,13 @@ python run.py index --dir "path/to/images" --limit 1000 --batch 16
 ```
 *(Runs at ~0.8s per image on CPU, fully parallelized and batch-optimized)*
 
-### 2. Retrieval & Search (Part B)
+### 2. Interactive Web UI Search
+Launch the Streamlit web dashboard to run search queries interactively with visual grid results, sidebar benchmark presets, and dynamic score breakdowns:
+```bash
+streamlit run app.py
+```
+
+### 3. Command-Line Retrieval (Part B)
 Query the database with a natural language description. Use the `--show` flag to draw bounding boxes and pop open the top match in your default image viewer:
 ```bash
 python run.py search "Someone wearing a blue shirt sitting on a park bench" --show

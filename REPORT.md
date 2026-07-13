@@ -149,6 +149,7 @@ glance assgn/
 ├── utils/
 │   └── database.py       # SQLite vector database connector
 │
+├── app.py                # Streamlit Web UI Dashboard
 ├── test_queries.py       # Automated benchmark query evaluator and grid generator
 └── run.py                # Command-line entrypoint script
 ```
@@ -158,7 +159,11 @@ glance assgn/
   ```bash
   python run.py index --limit 1000 --batch 16
   ```
-* **To run the Retriever Search (Part B)**:
+* **To launch the Interactive Web UI**:
+  ```bash
+  streamlit run app.py
+  ```
+* **To run the Retriever Search (Part B via CLI)**:
   ```bash
   python run.py search "Someone wearing a blue shirt sitting on a park bench" --show
   ```
