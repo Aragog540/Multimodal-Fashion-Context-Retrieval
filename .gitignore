@@ -1,0 +1,23 @@
+# Datasets and Databases
+val_test2020/
+fashion_search.db
+test_temp.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.venv/
+env/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# System and Logs
+*.log
+.DS_Store
+Thumbs.db
