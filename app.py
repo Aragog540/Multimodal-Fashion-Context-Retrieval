@@ -49,7 +49,7 @@ st.markdown("""
         color: #555;
     }
     </style>
-""", unsafe_allow_name_tags=True, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # Cache the retriever to avoid loading CLIP models on every rerun
 @st.cache_resource
