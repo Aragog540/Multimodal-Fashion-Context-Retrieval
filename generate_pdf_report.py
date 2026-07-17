@@ -53,9 +53,9 @@ def build_pdf_from_markdown(md_path="REPORT.md", pdf_path="Glance_ML_Assignment_
         
         # Handle Horizontal Rules
         if line_strip in ("---", "***"):
-            pdf.ln(5)
+            pdf.ln(4)
             pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 180, pdf.get_y())
-            pdf.ln(5)
+            pdf.ln(4)
             continue
             
         # Handle Code Block Toggles
@@ -67,10 +67,13 @@ def build_pdf_from_markdown(md_path="REPORT.md", pdf_path="Glance_ML_Assignment_
         # If in a code block, format as Courier mono-spaced
         if in_code_block:
             pdf.set_font("courier", "", 9)
-            pdf.set_text_color(40, 40, 50)
-            # Indent code blocks
-            pdf.cell(10)
-            pdf.multi_cell(170, 5, sanitize_text(line), border=0, align="L")
+            pdf.set_text_color(50, 50, 60)
+            
+            # Temporarily shift left margin for code block indentation
+            pdf.set_left_margin(25)
+            pdf.set_x(25)
+            pdf.multi_cell(160, 4.5, sanitize_text(line), border=0, align="L")
+            pdf.set_left_margin(15)
             pdf.set_x(15)
             continue
             
@@ -86,7 +89,7 @@ def build_pdf_from_markdown(md_path="REPORT.md", pdf_path="Glance_ML_Assignment_
             
         if line_strip.startswith("## "):
             pdf.ln(5)
-            pdf.set_font("helvetica", "B", 14)
+            pdf.set_font("helvetica", "B", 13)
             pdf.set_text_color(40, 60, 130)  # Muted Blue Heading
             heading = line_strip[3:]
             pdf.multi_cell(180, 7, sanitize_text(heading), border=0, align="L")
@@ -94,8 +97,8 @@ def build_pdf_from_markdown(md_path="REPORT.md", pdf_path="Glance_ML_Assignment_
             continue
             
         if line_strip.startswith("### "):
-            pdf.ln(4)
-            pdf.set_font("helvetica", "B", 11)
+            pdf.ln(3)
+            pdf.set_font("helvetica", "B", 10.5)
             pdf.set_text_color(50, 50, 80)
             sub = line_strip[4:]
             pdf.multi_cell(180, 6, sanitize_text(sub), border=0, align="L")
@@ -108,81 +111,120 @@ def build_pdf_from_markdown(md_path="REPORT.md", pdf_path="Glance_ML_Assignment_
             alert_text = line_strip[2:]
             alert_text = re.sub(r"^\[!(NOTE|IMPORTANT|WARNING|TIP|CAUTION)\]\s*", "", alert_text)
             
-            pdf.set_font("helvetica", "I", 9)
-            pdf.set_text_color(100, 30, 30)  # Dark Red Alert Text
-            pdf.set_fill_color(255, 240, 240)  # Light pink background
+            # Formatted box
+            pdf.set_font("helvetica", "I", 9.5)
+            pdf.set_text_color(90, 20, 20)  # Dark Red Alert Text
+            pdf.set_fill_color(255, 245, 245)  # Light pink background
+            pdf.set_left_margin(20)
+            pdf.set_x(20)
             # Draw a light box for alerts
-            pdf.multi_cell(180, 5, sanitize_text(f"Note: {alert_text}"), border=1, align="L", fill=True)
+            pdf.multi_cell(170, 5, sanitize_text(f"Note: {alert_text}"), border=1, align="L", fill=True)
+            pdf.set_left_margin(15)
+            pdf.set_x(15)
             pdf.ln(2)
             continue
             
-        # Handle List Items
+        # Handle List Items (Hanging Indents)
         is_bullet = line_strip.startswith("- ") or line_strip.startswith("* ")
         if is_bullet:
             line_content = line_strip[2:]
-            pdf.set_font("helvetica", "", 10)
-            pdf.set_text_color(30, 30, 30)
-            # Indent list bullets
-            pdf.cell(5)
-            # Draw a bullet symbol
-            pdf.cell(5, 5, chr(149), border=0, align="L")
-            # Parse bold inline markers in bullets
+            
+            # Print bullet symbol at X=18
+            pdf.set_x(18)
+            pdf.set_font("helvetica", "B", 10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.cell(5, 5, "-", border=0, align="L")
+            
+            # Clean list item text
             cleaned_content = re.sub(r"\*\*([^*]+)\*\*", r"\1", line_content)
-            # Remove markdown links
             cleaned_content = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", cleaned_content)
             
-            pdf.multi_cell(170, 5, sanitize_text(cleaned_content), border=0, align="L")
+            # Set left margin to 23 for proper text wrapping
+            pdf.set_left_margin(23)
+            pdf.set_x(23)
+            pdf.set_font("helvetica", "", 9.5)
+            pdf.set_text_color(30, 30, 30)
+            pdf.multi_cell(167, 5, sanitize_text(cleaned_content), border=0, align="L")
+            
+            # Reset left margin
+            pdf.set_left_margin(15)
             pdf.set_x(15)
             pdf.ln(1)
             continue
             
-        # Handle Table Formatting (Simple skip or parse)
+        # Handle Table Formatting (Clean 5-column grid)
         if line_strip.startswith("|"):
             # If it's the header separator line, skip it
-            if "---" in line_strip:
+            if "---" in line_strip or "| :---" in line_strip:
                 continue
+            
             # Parse table columns
             columns = [c.strip() for c in line_strip.split("|")[1:-1]]
-            pdf.set_font("helvetica", "B" if "Approach" in line_strip or "Vanilla" in line_strip else "", 8)
-            pdf.set_text_color(40, 40, 40)
             
-            # Simple column rendering with width limits
-            # Table width: 40 + 55 + 40 + 45 = 180mm
-            col_widths = [40, 55, 45, 40]
-            if len(columns) >= 4:
+            # We want a 5-column layout
+            # Table width: 30 + 45 + 35 + 35 + 35 = 180mm
+            col_widths = [30, 45, 35, 35, 35]
+            
+            if len(columns) >= 5:
+                # Check if it is the header row
+                is_header = "Approach" in columns[0]
+                
+                # Check if we need to trigger page break to prevent split cells
+                # Estimate height based on length of longest cell (approx 15 lines max -> ~60mm height)
+                approx_height = max([len(col) // 10 * 4 + 8 for col in columns])
+                if pdf.get_y() + approx_height > 275:
+                    pdf.add_page()
+                    
                 x_before = pdf.get_x()
                 y_before = pdf.get_y()
                 max_h = 0
-                for col_idx, text in enumerate(columns[:4]):
-                    # Parse bold markers
+                
+                # Draw the row cells
+                for col_idx, text in enumerate(columns[:5]):
+                    # Parse bold markers and HTML breaks
                     text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
                     text = text.replace("<br>", "\n")
+                    
+                    # Set font & colors
+                    if is_header:
+                        pdf.set_font("helvetica", "B", 8)
+                        pdf.set_fill_color(230, 235, 245)  # Light Blue/Grey background for header
+                        pdf.set_text_color(30, 40, 80)
+                    else:
+                        pdf.set_font("helvetica", "", 7.5)
+                        pdf.set_fill_color(255, 255, 255)  # White background for rows
+                        pdf.set_text_color(40, 40, 40)
+                        
+                    # Position cursor and print cell
+                    pdf.set_y(y_before)
                     pdf.set_x(x_before + sum(col_widths[:col_idx]))
-                    # Print inside cell
-                    pdf.multi_cell(col_widths[col_idx], 4, sanitize_text(text), border=1, align="L")
-                    # Track max height
+                    
+                    pdf.multi_cell(col_widths[col_idx], 4.5, sanitize_text(text), border=1, align="L", fill=True)
+                    
+                    # Track height of the cell
                     h_cell = pdf.get_y() - y_before
                     if h_cell > max_h:
                         max_h = h_cell
-                        
+                
+                # Align cursor below the row
                 pdf.set_y(y_before + max_h)
                 pdf.set_x(15)
+                pdf.ln(1)
                 continue
             
         # Handle Standard Paragraphs
         if line_strip:
             pdf.set_font("helvetica", "", 10)
-            pdf.set_text_color(40, 40, 40)
+            pdf.set_text_color(45, 45, 45)
+            
             cleaned_line = re.sub(r"\*\*([^*]+)\*\*", r"\1", line_strip)
-            # Strip inline code markers
             cleaned_line = re.sub(r"`([^`]+)`", r"\1", cleaned_line)
-            # Strip links [Text](URL) -> Text
             cleaned_line = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", cleaned_line)
             
             pdf.multi_cell(180, 5, sanitize_text(cleaned_line), border=0, align="L")
-            pdf.ln(3)
+            pdf.ln(2.5)
         else:
-            pdf.ln(2)
+            pdf.ln(1.5)
 
     print(f"Saving PDF to {pdf_path}...")
     pdf.output(pdf_path)
